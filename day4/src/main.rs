@@ -7,6 +7,7 @@ use rustc_serialize::hex::ToHex;
 use std::thread;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::env;
 
 
 static INPUT: &'static str = "iwrupvqb";
@@ -38,7 +39,7 @@ fn run(thread_num: i64, total_threads: i64, found5: &Arc<AtomicBool>, found6: &A
                 found5.store(true,Ordering::Relaxed);
             }
 
-            if out[3]==0 {
+            if out[2]==0 {
                 println!("Number for MD5 with 6 zeroes is: {}, md5 hash is: {}",n,out.to_hex());
                 found6.store(true,Ordering::Relaxed);
                 break;
@@ -49,18 +50,26 @@ fn run(thread_num: i64, total_threads: i64, found5: &Arc<AtomicBool>, found6: &A
 }
 
 fn main() {
+    let mut num_threads = 8i64;
+
     let mut children = vec![];
 
     let found5 = AtomicBool::new(false);
     let found6 = AtomicBool::new(false);
     let af5 = Arc::new(found5);
     let af6 = Arc::new(found6);
-    for i in 0..8 {
+
+    let args: Vec<_> = env::args().collect();
+    if args.len() > 1 {
+        num_threads = args[1].parse::<i64>().unwrap();
+    }
+
+    for i in 0..num_threads {
         // Spin up another thread
         let f5 = af5.clone();
         let f6 = af6.clone();
         children.push(thread::spawn(move || {
-            run(i,8,&f5,&f6);
+            run(i,num_threads,&f5,&f6);
         }));
     }
 
