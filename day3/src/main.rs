@@ -28,27 +28,49 @@ impl VisitMap {
 }
 
 
+fn move_santa(x: i32, y: i32, c: char) -> (i32,i32) {
+    match c {
+        '<' => (x-1,y),
+        '>' => (x+1,y),
+        '^' => (x,y+1),
+        'v' => (x,y-1),
+        _   => (x,y),
+    }
+}
 
 fn main() {
     let file = File::open("input.txt").unwrap();
 
-    let mut x = 0;
-    let mut y = 0;
-    let mut visits = VisitMap::new();
+    let (mut x1,mut x2,mut x3,mut y1,mut y2,mut y3) = (0,0,0,0,0,0);
+    let mut visits_one = VisitMap::new();
+    let mut visits_two = VisitMap::new();
 
-    visits.visit(x,y);
+    let mut buf = vec![];
+    loop {
+        buf.clear();
+        let f = &file;
+        let mut t = f.take(2);
 
-    for byte in file.bytes() {
-        let b = byte.unwrap() as char;
-        match b {
-            '<' => x-=1,
-            '>' => x+=1,
-            '^' => y+=1,
-            'v' => y-=1,
-            _   => continue,
-        }
-        visits.visit(x,y);
+        if t.read_to_end(&mut buf).is_err() || buf.len()<2 { break }
+
+        let (x,y) = move_santa(x1,y1,buf[0] as char);
+        visits_one.visit(x,y);
+        x1=x; y1=y;
+        let (x,y) = move_santa(x1,y1,buf[1] as char);
+        visits_one.visit(x,y);
+        x1=x; y1=y;
+
+        let (x,y) = move_santa(x2,y2,buf[0] as char);
+        visits_two.visit(x,y);
+        x2=x; y2=y;
+        let (x,y) = move_santa(x3,y3,buf[1] as char);
+        visits_two.visit(x,y);
+        x3=x; y3=y;
     }
-
-    println!("Houses visited: {}",visits.number());
+    println!("Houses visited by santa alone: {}",visits_one.number());
+    println!("Houses visited by santa and robo santa: {}",visits_two.number());
 }
+
+
+
+
