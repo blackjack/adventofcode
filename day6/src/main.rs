@@ -5,26 +5,24 @@ use std::io::BufRead;
 use std::fs::File;
 use regex::Regex;
 
-fn turn_on(bulb: u8)->u8 {
-    1
-}
-
-fn turn_off(bulb: u8)->u8 {
-    0
-}
-
-fn toggle(bulb: u8)->u8 {
-    if bulb==1 {0} else {1}
-}
-
 struct Action {
     x1: i32,
     y1: i32,
     x2: i32,
     y2: i32,
-    f: fn(u8)->u8,
+    f1: fn(i32)->i32,
+    f2: fn(i32)->i32,
 }
 
+#[allow(unused_variables)]
+fn turn_on1(b: i32)->i32 { 1 }
+#[allow(unused_variables)]
+fn turn_off1(b: i32)->i32 { 0 }
+fn toggle1(b: i32)->i32 { if b>0 {0} else {1} }
+
+fn turn_on2(b: i32)->i32 { b+1 }
+fn turn_off2(b: i32)->i32 { if b>1 {b-1} else {0} }
+fn toggle2(b: i32)->i32 { b+2 }
 
 impl Action {
     pub fn parse_string(s: &str)->Action {
@@ -37,20 +35,27 @@ impl Action {
         let x2 = captures.at(4).unwrap().parse::<i32>().unwrap();
         let y2 = captures.at(5).unwrap().parse::<i32>().unwrap();
 
-        let f: fn(u8)->u8 = match action_str {
-            "turn on" => turn_on,
-            "turn off" => turn_off,
-            _ => toggle
+        let f1: fn(i32)->i32 = match action_str {
+            "turn on" => turn_on1,
+            "turn off" => turn_off1,
+            _ => toggle1,
         };
 
-        return Action { x1: x1, y1: y1, x2: x2, y2: y2, f: f };
+        let f2: fn(i32)->i32 = match action_str {
+            "turn on" => turn_on2,
+            "turn off" => turn_off2,
+            _ => toggle2,
+        };
+
+        return Action { x1: x1, y1: y1, x2: x2, y2: y2, f1: f1, f2: f2 };
     }
 }
 
 fn main() {
     let file = File::open("input.txt").unwrap();
     let reader = BufReader::new(&file);
-    let mut map = [[0u8; 1000]; 1000];
+    let mut map1 = [[0i32; 1000]; 1000];
+    let mut map2 = [[0i32; 1000]; 1000];
 
     for line in reader.lines() {
         let line = line.unwrap();
@@ -60,18 +65,27 @@ fn main() {
 
         for x in act.x1..act.x2+1 {
             for y in act.y1..act.y2+1 {
-                map[x as usize][y as usize] = (act.f)(map[x as usize][y as usize]);
+                let x = x as usize;
+                let y = y as usize;
+                map1[x][y] = (act.f1)(map1[x][y]);
+                map2[x][y] = (act.f2)(map2[x][y]);
             }
         }
     }
 
-    let mut count = 0;
-    for x in map.iter() {
+    let mut count1 = 0;
+    let mut count2 = 0;
+    for x in map1.iter() {
         for y in x.iter() {
-            count+=if *y>0 {1} else {0};
+            count1+=if *y>0 {1} else {0};
         }
     }
-    println!("Number of bulbs lit: {}",count);
+    for x in map2.iter() {
+        for y in x.iter() {
+            count2+=*y;
+        }
+    }
+    println!("Number of bulbs lit: {}, total brightness: {}",count1,count2);
 }
 
 
