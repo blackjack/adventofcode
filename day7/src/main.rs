@@ -17,7 +17,6 @@ struct Operation {
     x: Argument,
     y: Argument,
     f: fn(i32,i32)->i32,
-    fs: String,
     dest: String,
 }
 
@@ -60,10 +59,9 @@ impl Operation {
         let y = Argument::parse(captures.at(3).unwrap_or(""));
 
         let dest = captures.at(4).unwrap();
-        return (dest.to_string(),Operation{ x: x, y: y, f: f, fs: captures.at(2).unwrap_or("").to_string(), dest: dest.to_string() });
+        return (dest.to_string(),Operation{ x: x, y: y, f: f, dest: dest.to_string() });
     }
     fn execute(&self, registers: &HashMap<String,Operation>, cache: &mut HashMap<String,i32>)->i32 {
-
         {
             let cached = cache.get(&self.dest);
             if cached.is_some() { return *cached.unwrap(); }
@@ -103,5 +101,10 @@ fn main() {
         registers.insert( dest, op );
     }
 
-    println!("Value of a: {}", registers.get("a").unwrap().execute(&registers,&mut cache));
+    let a = registers.get("a").unwrap().execute(&registers,&mut cache);
+    cache.clear();
+    *registers.get_mut("b").unwrap() = Operation{x:Argument::Value(a), y:Argument::None, f:noop, dest: "b".to_string()};
+    let a2 = registers.get("a").unwrap().execute(&registers,&mut cache);
+
+    println!("Value of a: {}, after permutations: {}",a,a2);
 }
