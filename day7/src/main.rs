@@ -43,21 +43,6 @@ impl Argument {
     }
 }
 
-impl std::fmt::Debug for Operation {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        let x = match self.x {
-            Argument::Variable(ref s) => s.clone(),
-            Argument::Value(v) => v.to_string(),
-            _ => "".to_string(),
-        };
-        let y = match self.y {
-            Argument::Variable(ref s) => s.clone(),
-            Argument::Value(v) => v.to_string(),
-            _ => "".to_string(),
-        };
-        write!(f, "{} {} {} -> {}",x,self.fs,y,self.dest)
-    }
-}
 impl Operation {
     fn parse(line: &str)->(String,Operation) {
         let re = Regex::new("(\\d+|[a-z]+)? ?(AND|NOT|OR|LSHIFT|RSHIFT)? ?(\\d+|[a-z]+)? -> ([a-z]+)").unwrap();
