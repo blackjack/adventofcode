@@ -12,12 +12,12 @@ use std::env;
 
 static INPUT: &'static str = "iwrupvqb";
 
-fn md5(s: &'static str, i: i64) -> [u8;16] {
+fn md5(s: &'static str, i: i64) -> [u8; 16] {
     let mut h = Md5::new();
     h.input(s.as_bytes());
     h.input(i.to_string().as_bytes());
 
-    let mut res = [0;16];
+    let mut res = [0; 16];
     h.result(&mut res);
     return res;
 }
@@ -25,27 +25,33 @@ fn md5(s: &'static str, i: i64) -> [u8;16] {
 
 fn run(thread_num: i64, total_threads: i64, found5: &Arc<AtomicBool>, found6: &Arc<AtomicBool>) {
 
-    println!("Spawning thread #{}",thread_num);
+    println!("Spawning thread #{}", thread_num);
     let mut n = thread_num;
 
     loop {
-        if found6.load(Ordering::Relaxed) { return }
-        let out = md5(INPUT,n);
+        if found6.load(Ordering::Relaxed) {
+            return;
+        }
+        let out = md5(INPUT, n);
         let first_five = out[0] as i32 + out[1] as i32 + (out[2] >> 4) as i32;
-        if first_five==0 {
+        if first_five == 0 {
 
             if !found5.load(Ordering::Relaxed) {
-                println!("Number for MD5 with 5 zeroes is: {}, md5 hash is: {}",n,out.to_hex());
-                found5.store(true,Ordering::Relaxed);
+                println!("Number for MD5 with 5 zeroes is: {}, md5 hash is: {}",
+                         n,
+                         out.to_hex());
+                found5.store(true, Ordering::Relaxed);
             }
 
-            if out[2]==0 {
-                println!("Number for MD5 with 6 zeroes is: {}, md5 hash is: {}",n,out.to_hex());
-                found6.store(true,Ordering::Relaxed);
+            if out[2] == 0 {
+                println!("Number for MD5 with 6 zeroes is: {}, md5 hash is: {}",
+                         n,
+                         out.to_hex());
+                found6.store(true, Ordering::Relaxed);
                 break;
             }
         }
-        n+=total_threads;
+        n += total_threads;
     }
 }
 
@@ -69,7 +75,7 @@ fn main() {
         let f5 = af5.clone();
         let f6 = af6.clone();
         children.push(thread::spawn(move || {
-            run(i,num_threads,&f5,&f6);
+            run(i, num_threads, &f5, &f6);
         }));
     }
 

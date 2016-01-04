@@ -8,23 +8,28 @@ fn decode(s: &[u8]) -> Vec<char> {
     let mut chars = s.iter().enumerate();
 
     loop {
-        let (idx,c) = match chars.next() {
-            Some((idx,ch)) => (idx,ch),
-            _ => break
+        let (idx, c) = match chars.next() {
+            Some((idx, ch)) => (idx, ch),
+            _ => break,
         };
         let c = *c as char;
 
-        if c=='"' && (idx==0||idx==s.len()-1) { continue }
-        if c=='\\' {
+        if c == '"' && (idx == 0 || idx == s.len() - 1) {
+            continue;
+        }
+        if c == '\\' {
             match chars.next() {
-                Some((_,ch)) if *ch as char != 'x' => { result.push(c); continue },
-                Some((_,ch)) if *ch as char == 'x' => {
+                Some((_, ch)) if *ch as char != 'x' => {
+                    result.push(c);
+                    continue;
+                }
+                Some((_, ch)) if *ch as char == 'x' => {
                     let h1 = *chars.next().unwrap().1 as char;
                     let h2 = *chars.next().unwrap().1 as char;
-                    let xx = h1.to_digit(16).unwrap()*16 + h2.to_digit(16).unwrap();
-                    result.push( xx as u8 as char );
+                    let xx = h1.to_digit(16).unwrap() * 16 + h2.to_digit(16).unwrap();
+                    result.push(xx as u8 as char);
                     continue;
-                },
+                }
                 _ => break,
             };
         }
@@ -42,7 +47,7 @@ fn encode(s: &[u8]) -> Vec<char> {
     result.push('"');
     for c in s.iter() {
         let ch = *c as char;
-        if ch=='"' || ch=='\\' {
+        if ch == '"' || ch == '\\' {
             result.push('\\');
         }
         result.push(ch);
@@ -70,60 +75,55 @@ fn main() {
         enclen += e.len();
     }
 
-    println!("Total code chars: {}, total decoded chars: {}, total encoded chars: {}, diff(dec): {}, diff(enc): {}",
-             codelen,declen,enclen,codelen-declen,enclen-codelen);
+    println!("Total code chars: {}, total decoded chars: {}, total encoded chars: {}, diff(dec): \
+              {}, diff(enc): {}",
+             codelen,
+             declen,
+             enclen,
+             codelen - declen,
+             enclen - codelen);
 }
 
 
 
 #[test]
 fn test_decode() {
-    let strings = vec!(
-        "\"\"",
-        "\"abc\"",
-        "\"aaa\\\"aaa\"",
-        "\"\\x27\""
-    );
+    let strings = vec!["\"\"", "\"abc\"", "\"aaa\\\"aaa\"", "\"\\x27\""];
 
     let l = &strings[0];
     let esc = decode(l.as_bytes());
-    assert_eq!(esc.len(),0);
+    assert_eq!(esc.len(), 0);
 
     let l = &strings[1];
     let esc = decode(l.as_bytes());
-    assert_eq!(esc.len(),3);
+    assert_eq!(esc.len(), 3);
 
     let l = &strings[2];
     let esc = decode(l.as_bytes());
-    assert_eq!(esc.len(),7);
+    assert_eq!(esc.len(), 7);
 
     let l = &strings[3];
     let esc = decode(l.as_bytes());
-    assert_eq!(esc.len(),1);
+    assert_eq!(esc.len(), 1);
 }
 
 #[test]
 fn test_encode() {
-    let strings = vec!(
-        "\"\"",
-        "\"abc\"",
-        "\"aaa\\\"aaa\"",
-        "\"\\x27\""
-    );
+    let strings = vec!["\"\"", "\"abc\"", "\"aaa\\\"aaa\"", "\"\\x27\""];
 
     let l = &strings[0];
     let esc = encode(l.as_bytes());
-    assert_eq!(esc.len(),6);
+    assert_eq!(esc.len(), 6);
 
     let l = &strings[1];
     let esc = encode(l.as_bytes());
-    assert_eq!(esc.len(),9);
+    assert_eq!(esc.len(), 9);
 
     let l = &strings[2];
     let esc = encode(l.as_bytes());
-    assert_eq!(esc.len(),16);
+    assert_eq!(esc.len(), 16);
 
     let l = &strings[3];
     let esc = encode(l.as_bytes());
-    assert_eq!(esc.len(),11);
+    assert_eq!(esc.len(), 11);
 }

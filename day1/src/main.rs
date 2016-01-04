@@ -9,16 +9,16 @@ fn main() {
     let mut found_pos = false;
     for byte in file.bytes() {
         match byte.unwrap() as char {
-            '(' => floor+=1,
-            ')' => floor-=1,
-            _   => {}
+            '(' => floor += 1,
+            ')' => floor -= 1,
+            _ => {}
         }
-        if !found_pos && floor==-1 {
-            println!("Position that causes basement entering: {}",pos);
+        if !found_pos && floor == -1 {
+            println!("Position that causes basement entering: {}", pos);
             found_pos = true;
         }
-        pos+=1;
+        pos += 1;
     }
 
-    println!("Result floor is: {}",floor);
+    println!("Result floor is: {}", floor);
 }
