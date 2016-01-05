@@ -1,51 +1,14 @@
+#![feature(iter_arith)]
 extern crate regex;
+extern crate permutohedron;
 
 use std::fs::File;
 use std::io::BufRead;
 use regex::Regex;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use permutohedron::*;
 
-struct Cities {
-    data: Vec<String>,
-}
-
-impl Cities {
-    fn new() -> Cities {
-        Cities { data: Vec::new() }
-    }
-    fn get(&self, s: usize) -> &str {
-        &self.data[s]
-    }
-
-    fn insert(&mut self, s: &str) -> usize {
-        let s = s.to_string();
-        match self.data.iter().position(|x|*x==s) {
-            Some(x) => x,
-            _ => { self.data.push(s); self.data.len()-1 }
-        }
-    }
-}
-
-struct Distances {
-    data: Vec<Vec<u32>>,
-}
-
-impl Distances {
-    fn new() -> Distances {
-        Distances { data: Vec::new() }
-    }
-
-    fn get_mut(&mut self, x: usize, y: usize) -> &mut u32 {
-        if self.data.len() < x + 1 {
-            self.data.resize(x + 1, Vec::new());
-        }
-
-        let mut yvec = self.data.get_mut(x).unwrap();
-        if yvec.len() < y + 1 {
-            yvec.resize(y + 1, 999999u32);
-        }
-        return yvec.get_mut(y).unwrap();
-    }
-}
 
 fn parse_line(s: &str) -> (&str, &str, u32) {
     let re = Regex::new("(\\w+) to (\\w+) = (\\d+)").unwrap();
@@ -56,30 +19,31 @@ fn parse_line(s: &str) -> (&str, &str, u32) {
 }
 
 fn main() {
-    let mut file = File::open("input.txt").unwrap();
-    let mut cities = Cities::new();
-    let mut distances = Distances::new();
+    let file = File::open("input.txt").unwrap();
+    let mut distances: HashMap<(String, String), u32> = HashMap::new();
+    let mut cities: HashSet<String> = HashSet::new();
 
     let reader = std::io::BufReader::new(&file);
     for line in reader.lines() {
         let line = line.unwrap();
         let (f, t, d) = parse_line(&line);
 
-        let x = cities.insert(f);
-        let y = cities.insert(t);
-        *distances.get_mut(x, y) = d;
-        *distances.get_mut(y, x) = d;
+        distances.insert((f.to_string(), t.to_string()), d);
+        distances.insert((t.to_string(), f.to_string()), d);
+        cities.insert(f.to_string());
+        cities.insert(t.to_string());
     }
 
-    let vec2: Vec<&str> = cities.data.iter().map(|x|&x[..if x.len()>6 {6} else {x.len()}]).collect();
-    println!("\t{}", vec2.join("\t"));
-    for (y, yvec) in distances.data.iter().enumerate() {
-        print!("{:.6}\t", cities.get(y as usize).to_string());
-        for val in yvec.iter() {
-            print!("{0: <6}\t", val);
-        }
-        print!("\n");
+    let mut cities: Vec<_> = cities.iter().collect();
+    let mut perms = Heap::new(&mut cities);
+
+
+    let mut min = 999999u32;
+    let mut max = 0u32;
+    while let Some(route) = perms.next_permutation() {
+        let cost: u32 = route.windows(2).map(|t| distances[&(t[0].clone(), t[1].clone())]).sum();
+        min = std::cmp::min(min,cost);
+        max = std::cmp::max(max,cost);
     }
-
-
+    println!("Min distance: {}, max distance: {}",min,max);
 }
