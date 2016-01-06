@@ -1,15 +1,7 @@
 fn inc(s: &mut [u8]) {
     for i in (0..s.len()).rev() {
         if s[i] == 'z' as u8 {
-            if i == 0 {
-                return;
-            }
-
-            if s[i - 1] != 'z' as u8 {
-                s[i - 1] += 1;
-                s[i] = 'a' as u8;
-                return;
-            }
+            s[i] = 'a' as u8;
         } else {
             s[i] += 1;
             return;
@@ -18,27 +10,29 @@ fn inc(s: &mut [u8]) {
 }
 
 fn check(s: &[u8]) -> bool {
-    if !s.windows(3).any(|x| x[1] == x[0] + 1 && x[2] == x[1] + 1) {
-        return false;
-    }
-    if s.iter().any(|&x| ['i', 'o', 'l'].contains(&(x as char))) {
-        return false;
-    }
-    let accumulator = |acc: u32, x: &[u8]| {
-        if x.len() < 2 || x[0] != x[1] {
-            return acc;
-        } else {
-            return acc + 1;
+    let mut pairs = 0;
+    let mut has_inc = false;
+    let mut prev = 0u8;
+    let mut prev2 = 0u8;
+
+    for &c in s.iter() {
+        if ['i', 'o', 'l'].contains(&(c as char)) {
+            return false;
         }
-    };
 
-    let pairs_odd = s.chunks(2).fold(0, &accumulator);
-    let pairs_even = s[1..s.len()].chunks(2).fold(0, &accumulator);
-    if pairs_odd + pairs_even < 2 {
-        return false;
+        if c == prev + 1 && prev == prev2 + 1 {
+            has_inc = true;
+        }
+
+        if c == prev && prev != prev2 {
+            pairs += 1;
+        }
+
+        prev2 = prev;
+        prev = c;
     }
 
-    return true;
+    return has_inc && pairs >= 2;
 }
 
 fn main() {
@@ -51,4 +45,36 @@ fn main() {
         }
     }
     println!("New password is: {}", std::str::from_utf8(&input).unwrap());
+}
+
+
+#[test]
+fn test1() {
+    assert_eq!(check(&"hijklmmn".to_string().into_bytes()), false);
+}
+
+#[test]
+fn test2() {
+    assert_eq!(check(&"abcdffaa".to_string().into_bytes()), true);
+}
+
+#[test]
+fn test3() {
+    let mut input = "abcdefgh".to_string().into_bytes();
+    loop {
+        inc(&mut input);
+        println!("New password is: {}", std::str::from_utf8(&input).unwrap());
+        if check(&input) {
+            println!("Passes: {}", std::str::from_utf8(&input).unwrap());
+            break;
+        }
+    }
+    assert_eq!("abcdffaa".to_string().into_bytes(), input);
+}
+
+#[test]
+fn test4() {
+    let mut input = "abcdfezz".to_string().into_bytes();
+    inc(&mut input);
+    assert_eq!("abcdffaa".to_string().into_bytes(), input);
 }
