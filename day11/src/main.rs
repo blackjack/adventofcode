@@ -44,7 +44,15 @@ fn main() {
             break;
         }
     }
-    println!("New password is: {}", std::str::from_utf8(&input).unwrap());
+    println!("First password is: {}", std::str::from_utf8(&input).unwrap());
+
+    loop {
+        inc(&mut input);
+        if check(&input) {
+            break;
+        }
+    }
+    println!("Second password is: {}", std::str::from_utf8(&input).unwrap());
 }
 
 
