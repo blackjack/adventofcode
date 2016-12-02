@@ -101,19 +101,19 @@ fn main() {
 fn check1() {
     let input = "R2, L3";
     let expect = 5;
-    assert_eq!(expect, run(input).0);
+    assert_eq!(expect, run(input));
 }
 
 #[test]
 fn check2() {
     let input = "R2, R2, R2";
     let expect = 2;
-    assert_eq!(expect, run(input).0);
+    assert_eq!(expect, run(input));
 }
 
 #[test]
 fn check3() {
     let input = "R5, L5, R5, R3";
     let expect = 12;
-    assert_eq!(expect, run(input).0);
+    assert_eq!(expect, run(input));
 }
