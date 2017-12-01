@@ -30,37 +30,62 @@ fn read_input(path: &Option<String>) -> Result<String, Error> {
     Ok(result)
 }
 
-fn count_digits(input: &str) -> u32 {
+fn get_other_index_part1(i: usize, len: usize) -> usize {
+    (i + 1) % len
+}
+
+fn get_other_index_part2(i: usize, len: usize) -> usize {
+    (i + len / 2) % len
+}
+
+fn count_digits<T: Fn(usize, usize) -> usize>(input: &str, get_other_index: T) -> u32 {
     let input = input.as_bytes();
-    let mut count: u32 = input
-        .windows(2)
-        .map(|w| if w[0] == w[1] {
-            (w[0] as char).to_digit(10).unwrap()
+    input
+        .iter()
+        .enumerate()
+        .map(|(idx, &val)| if val ==
+            input[get_other_index(idx, input.len())]
+        {
+            (val as char).to_digit(10).unwrap()
         } else {
             0
         })
-        .sum();
-
-    if input.len() > 2 && input.last() == input.first() {
-        count += (*input.last().unwrap() as char).to_digit(10).unwrap();
-    }
-
-    count
+        .sum()
 }
 
 fn main() {
     let opt = Opts::from_args();
     let input = read_input(&opt.input).unwrap_or_else(|e| panic!("Failed to read input: {}", e));
 
-    println!("Result: {}", count_digits(input.trim()));
+    println!(
+        "Result of part 1: {}",
+        count_digits(input.trim(), &get_other_index_part1)
+    );
+    println!(
+        "Result of part 2: {}",
+        count_digits(input.trim(), &get_other_index_part2)
+    );
 }
 
+#[test]
+fn test_get_other_index_part1() {
+    assert_eq!(get_other_index_part1(0, 3), 1);
+    assert_eq!(get_other_index_part1(2, 3), 0);
+}
 
 #[test]
-fn test_count() {
-    assert_eq!(count_digits("1122"), 3);
-    assert_eq!(count_digits("1111"), 4);
-    assert_eq!(count_digits("1234"), 0);
-    assert_eq!(count_digits("91212129"), 9);
-    assert_eq!(count_digits("32333"), 9);
+fn test_get_other_index_part2() {
+    assert_eq!(get_other_index_part2(0, 4), 2);
+    assert_eq!(get_other_index_part2(3, 4), 1);
+    assert_eq!(get_other_index_part2(4, 6), 1);
+}
+
+#[test]
+fn test_count_part1() {
+    let idx = get_other_index_part1;
+    assert_eq!(count_digits("1122", &idx), 3);
+    assert_eq!(count_digits("1111", &idx), 4);
+    assert_eq!(count_digits("1234", &idx), 0);
+    assert_eq!(count_digits("91212129", &idx), 9);
+    assert_eq!(count_digits("32333", &idx), 9);
 }
