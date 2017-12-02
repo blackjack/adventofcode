@@ -1,0 +1,9 @@
+[package]
+name = "day2"
+version = "0.1.0"
+authors = ["Oleksandr Senkovych <bjsenya@gmail.com>"]
+
+[dependencies]
+failure = "0.1.1"
+structopt = "0.1.0"
+structopt-derive = "0.1.0"
