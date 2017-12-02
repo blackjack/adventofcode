@@ -7,7 +7,7 @@ use structopt::StructOpt;
 use failure::Error;
 use std::fs::File;
 use std::io::Read;
-use std::cmp::{min, max};
+use std::cmp;
 
 #[derive(StructOpt, Debug)]
 #[structopt(name = "day2", about = "Advent of code 2017 day 2")]
@@ -44,18 +44,32 @@ fn parse_matrix(input: &str) -> Result<Matrix, Error> {
     input.split('\n').map(parse_line).collect()
 }
 
-fn get_min_max(row: &Vec<u32>) -> (u32, u32) {
-    row.iter().fold((row[0], 0), |(mn, mx), &element| {
-        (min(mn, element), max(mx, element))
-    })
+fn get_min_max(row: &[u32]) -> u32 {
+    let (min, max) = row.iter().skip(1).fold(
+        (row[0], row[0]),
+        |(min, max), &element| {
+            (cmp::min(min, element), cmp::max(max, element))
+        },
+    );
+    max - min
 }
 
-fn get_checksum(matrix: &Matrix) -> u32 {
-    matrix
-        .iter()
-        .map(get_min_max)
-        .map(|(mn, mx)| return mx - mn)
-        .sum()
+fn get_divisible(row: &[u32]) -> u32 {
+    for (idx, element) in row.iter().enumerate() {
+        for other in &row[idx + 1..] {
+            if other % element == 0 {
+                return other / element;
+            }
+            if element % other == 0 {
+                return element / other;
+            }
+        }
+    }
+    0
+}
+
+fn get_checksum<T: Fn(&[u32]) -> u32>(matrix: &Matrix, row_function: T) -> u32 {
+    matrix.iter().map(Vec::as_slice).map(row_function).sum()
 }
 
 
@@ -66,7 +80,14 @@ fn main() {
     let matrix =
         parse_matrix(input.trim()).unwrap_or_else(|e| panic!("Failed to parse input: {}", e));
 
-    println!("Checksum is: {}", get_checksum(&matrix));
+    println!(
+        "Checksum for part 1 is: {}",
+        get_checksum(&matrix, get_min_max)
+    );
+    println!(
+        "Checksum for part 2 is: {}",
+        get_checksum(&matrix, get_divisible)
+    );
 }
 
 #[test]
@@ -85,5 +106,11 @@ fn test_parse_matrix() {
 #[test]
 fn test_min_max() {
     let d = vec![1, 2, 3, 4, 5];
-    assert_eq!(get_min_max(&d), (1, 5));
+    assert_eq!(get_min_max(&d), 4);
+}
+
+#[test]
+fn test_get_divisible() {
+    let d = vec![5, 9, 2, 8];
+    assert_eq!(get_divisible(&d), 4);
 }
